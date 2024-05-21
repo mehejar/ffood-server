@@ -59,6 +59,18 @@ async function run() {
       })
       // next()
     }
+
+    // Verify admin
+    const verifyAdmin = async (req, res, next) =>{
+      const email = req.decoded.email;
+      const query = {email: email};
+      const user = await userCollection.findOne(query)
+      const isAdmin = user?.role === 'admin';
+      if(!isAdmin){
+        return res.status(403).send({ message: 'forbidden access' });
+      }
+      next()
+    }
     
 
     
@@ -79,21 +91,21 @@ async function run() {
       res.send(result)
     })
 
-    app.get('/user', verifyToken, async(req, res) =>{
+    app.get('/user', verifyToken, verifyAdmin, async(req, res) =>{
       // console.log(req.headers)
       const result = await userCollection.find().toArray()
       res.send(result)
     })
 
     // user access
-    app.delete('/user/:id', async (req, res) =>{
+    app.delete('/user/:id', verifyToken, verifyAdmin, async (req, res) =>{
       const id = req.params.id
       const query = {_id: new ObjectId(id)}
       const result = await userCollection.deleteOne(query)
       res.send(result)
     })
 
-    app.patch('/user/admin/:id', async (req, res) =>{
+    app.patch('/user/admin/:id', verifyToken, verifyAdmin, async (req, res) =>{
       const id = req.params.id;
       const filter = {_id: new ObjectId(id)}
       const updatedDoc = {
@@ -106,7 +118,29 @@ async function run() {
 
     })
 
+    app.get('/user/admin/:email', verifyToken, async (req, res) =>{
+      const email = req.params.email
+      if(email !== req.decoded.email){
+        return res.status(403).send({message: 'unauthoried access'})
+      }
+
+      const query = {email: email}
+      const user = await userCollection.findOne(query);
+      let admin = false;
+      if(user){
+        admin = user?.role === 'admin'
+      }
+      res.send({ admin })
+    })
+
     // all products
+
+    app.post('/products', async (req, res) =>{
+      const product = req.body;
+      const result = await productsCollection.insertOne(product);
+      res.send(result);
+    })
+
     app.get('/products', async(req, res) =>{
         const result = await productsCollection.find().toArray();
         res.send(result)
