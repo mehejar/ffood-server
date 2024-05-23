@@ -30,6 +30,7 @@ async function run() {
     const productsCollection = client.db('freshFoodDB').collection('products')
     const cartCollection = client.db('freshFoodDB').collection('cart')
     const userCollection = client.db('freshFoodDB').collection('user')
+    const ordersCollection = client.db('freshFoodDB').collection('orders')
 
 
     // JWT related API
@@ -184,6 +185,33 @@ async function run() {
       const cartItem = req.body;
       const result = await cartCollection.insertOne(cartItem);
       res.send(result);
+    })
+
+    // orders collection
+    app.post('/orders', async (req, res) => {
+      const order = req.body;
+      const result = await ordersCollection.insertOne(order);
+
+      // const query = { _id:{
+      //   $in: order.cartId.map(id => ObjectId(id))
+      // }}
+      // const deleteResult = await cartCollection.deleteMany(query)
+
+      res.send(result);
+    })
+
+    app.get('/orders/:email', verifyToken, async(req, res) =>{
+      const query = {email: req.params.email}
+      if(req.params.email !== req.decoded.email){
+        return res.status(403).send({message: 'Forbidden'})
+      }
+      const result = await ordersCollection.find(query).toArray()
+      res.send(result)
+    })
+
+    app.get('/orders', async(req, res) =>{
+      const result = await ordersCollection.find().toArray()
+      res.send(result)
     })
 
 
