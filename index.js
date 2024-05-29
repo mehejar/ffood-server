@@ -31,6 +31,7 @@ async function run() {
     const cartCollection = client.db('freshFoodDB').collection('cart')
     const userCollection = client.db('freshFoodDB').collection('user')
     const ordersCollection = client.db('freshFoodDB').collection('orders')
+    const contactsCollection = client.db('freshFoodDB').collection('contacts')
 
 
     // JWT related API
@@ -119,6 +120,8 @@ async function run() {
 
     })
 
+
+
     app.get('/user/admin/:email', verifyToken, async (req, res) => {
       const email = req.params.email
       if (email !== req.decoded.email) {
@@ -169,7 +172,7 @@ async function run() {
         }
       }
 
-      const result =  await productsCollection.updateOne(filter, updatedDoc)
+      const result = await productsCollection.updateOne(filter, updatedDoc)
       res.send(result)
     })
 
@@ -187,31 +190,72 @@ async function run() {
       res.send(result);
     })
 
-    // orders collection
+    app.patch('/cart/:id', verifyToken, async (req, res) => {
+      const amount = req.body
+      const id = req.params.id
+      const filter = { _id: new ObjectId(id) }
+      const updatedDoc = {
+        $set: {
+          quantity: amount.totalQuantity,
+          subtotal: amount.subtotal
+         
+        }
+      }
+
+      const result = await cartCollection.updateOne(filter, updatedDoc)
+      res.send(result)
+    })
+
+    // orders collection-----------------------------------------
     app.post('/orders', async (req, res) => {
       const order = req.body;
       const result = await ordersCollection.insertOne(order);
 
-      // const query = { _id:{
-      //   $in: order.cartId.map(id => ObjectId(id))
-      // }}
-      // const deleteResult = await cartCollection.deleteMany(query)
+      const query = {
+        _id: {
+          $in: order.cartId.map(id => new ObjectId(id))
+        }
+      }
+      const deleteResult = await cartCollection.deleteMany(query)
 
-      res.send(result);
+      res.send({ result, deleteResult });
     })
 
-    app.get('/orders/:email', verifyToken, async(req, res) =>{
-      const query = {email: req.params.email}
-      if(req.params.email !== req.decoded.email){
-        return res.status(403).send({message: 'Forbidden'})
+    // =====status===========
+    app.patch('/orders/:id', verifyToken, verifyAdmin, async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) }
+      const updatedDoc = {
+        $set: {
+
+          status: 'confirm'
+        }
+      }
+      const result = await ordersCollection.updateOne(filter, updatedDoc)
+      res.send(result)
+
+    })
+
+    app.get('/orders/:email', verifyToken, async (req, res) => {
+      const query = { email: req.params.email }
+      if (req.params.email !== req.decoded.email) {
+        return res.status(403).send({ message: 'Forbidden' })
       }
       const result = await ordersCollection.find(query).toArray()
       res.send(result)
     })
 
-    app.get('/orders', async(req, res) =>{
+    app.get('/orders', async (req, res) => {
       const result = await ordersCollection.find().toArray()
       res.send(result)
+    })
+
+    // --------------Contacts--------------
+    app.post('/contacts', async (req, res) => {
+      const order = req.body;
+      const result = await contactsCollection.insertOne(order);
+
+      res.send(result);
     })
 
 
