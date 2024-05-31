@@ -172,6 +172,32 @@ async function run() {
         }
       }
 
+      app.patch('/products/instocks/:id', verifyToken, verifyAdmin, async(req, res) => {
+        const id = req.params.id;
+        const filter = { _id: new ObjectId(id) }
+        const updatedDoc = {
+          $set: {
+            stock: 'instock'
+          }
+        }
+        const result = await productsCollection.updateOne(filter, updatedDoc)
+        res.send(result)
+  
+      })
+      app.patch('/products/outofstocks/:id', verifyToken, verifyAdmin, async (req, res)=> {
+        const id = req.params.id;
+        const filter = { _id: new ObjectId(id) }
+        const updatedDoc = {
+          $set: {
+  
+            stock: 'outOfStock'
+          }
+        }
+        const result = await productsCollection.updateOne(filter, updatedDoc)
+        res.send(result)
+  
+      })
+
       const result = await productsCollection.updateOne(filter, updatedDoc)
       res.send(result)
     })
@@ -229,6 +255,19 @@ async function run() {
         $set: {
 
           status: 'confirm'
+        }
+      }
+      const result = await ordersCollection.updateOne(filter, updatedDoc)
+      res.send(result)
+
+    })
+    app.patch('/orders/myOrder/:id', verifyToken, async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) }
+      const updatedDoc = {
+        $set: {
+
+          status: 'cancel'
         }
       }
       const result = await ordersCollection.updateOne(filter, updatedDoc)
