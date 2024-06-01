@@ -172,34 +172,34 @@ async function run() {
         }
       }
 
-      app.patch('/products/instocks/:id', verifyToken, verifyAdmin, async(req, res) => {
-        const id = req.params.id;
-        const filter = { _id: new ObjectId(id) }
-        const updatedDoc = {
-          $set: {
-            stock: 'instock'
-          }
-        }
-        const result = await productsCollection.updateOne(filter, updatedDoc)
-        res.send(result)
-  
-      })
-      app.patch('/products/outofstocks/:id', verifyToken, verifyAdmin, async (req, res)=> {
-        const id = req.params.id;
-        const filter = { _id: new ObjectId(id) }
-        const updatedDoc = {
-          $set: {
-  
-            stock: 'outOfStock'
-          }
-        }
-        const result = await productsCollection.updateOne(filter, updatedDoc)
-        res.send(result)
-  
-      })
-
       const result = await productsCollection.updateOne(filter, updatedDoc)
       res.send(result)
+    })
+
+    app.patch('/products/instocks/:id', verifyToken, verifyAdmin, async(req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) }
+      const updatedDoc = {
+        $set: {
+          stock: 'instock'
+        }
+      }
+      const result = await productsCollection.updateOne(filter, updatedDoc)
+      res.send(result)
+
+    })
+    app.patch('/products/outofstocks/:id', verifyToken, verifyAdmin, async (req, res)=> {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) }
+      const updatedDoc = {
+        $set: {
+
+          stock: 'outOfStock'
+        }
+      }
+      const result = await productsCollection.updateOne(filter, updatedDoc)
+      res.send(result)
+
     })
 
     app.delete('/products/:id', verifyToken, verifyAdmin, async (req, res) => {
